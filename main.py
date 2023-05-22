@@ -19,9 +19,6 @@ async def main():
     The result will be extracted to the file result.json.
     """
     try:
-        asyncio.set_event_loop_policy(
-            asyncio.WindowsSelectorEventLoopPolicy()
-        )
         cli = cli_configuration()
         await PPTXSummarizer(cli.pptx_path).create_result_file()
         print("your summary is ready! check the result.json file.")
@@ -31,4 +28,7 @@ async def main():
 
 
 if __name__ == '__main__':
+    asyncio.set_event_loop_policy(
+        asyncio.WindowsSelectorEventLoopPolicy()
+    )
     asyncio.run(main())
