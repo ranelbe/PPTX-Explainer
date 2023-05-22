@@ -1,7 +1,7 @@
 
 PROMPT_SUFFIX = """provide a detailed explanation for this presentation slide, 
 you may include the following: 
-main message, key points, related concepts, supporting evidence, implications, 
+title, main message, key points, related concepts, supporting evidence, implications, 
 and any additional examples or illustrations to help understand the content better.
 """
 
