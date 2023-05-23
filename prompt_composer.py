@@ -9,13 +9,13 @@ and any additional examples or illustrations to help understand the content bett
 class PromptComposer:
     """ Composes a prompt suffix for each slide. """
 
-    def __init__(self, slides_text):
+    def __init__(self, slides_text: list):
         """ initialization.
             :param slides_text: list of slides text.
         """
         self.slides_text = slides_text
 
-    def compose(self):
+    def compose(self) -> list:
         """
         Composes a prompt suffix for each slide.
         :return: list of composed slides text.

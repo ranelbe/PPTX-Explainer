@@ -11,14 +11,14 @@ OUTPUT_FILE_NAME = 'result.json'
 class PPTXSummarizer:
     """ A class to summarize a PowerPoint presentation using GPT-3. """
 
-    def __init__(self, pptx_path):
+    def __init__(self, pptx_path: str):
         """
         initialization.
         :param pptx_path: the path to the PowerPoint presentation.
         """
         self.pptx_path = pptx_path
 
-    async def generate_result_list(self):
+    async def generate_result_list(self) -> list:
         """
         Generate a list of results from the API.
         :return: a list of results.

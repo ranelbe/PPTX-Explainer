@@ -8,7 +8,7 @@ SLIDE_PARSE_ERROR = "Cannot parse this slide: "
 class PPTXParser:
     """ Parse the presentation to get its data """
 
-    def __init__(self, presentation_path):
+    def __init__(self, presentation_path: str):
         """
            initialization.
            :param presentation_path: path to the PowerPoint presentation.
@@ -17,7 +17,7 @@ class PPTXParser:
         self._presentation = None
         self._slides = []
 
-    def extract_slides_text(self):
+    def extract_slides_text(self) -> list:
         """
         Extracts text from a PowerPoint presentation.
         :return: list of slides text.
@@ -39,7 +39,7 @@ class PPTXParser:
             raise ValueError(f"{FILE_ERROR}\n{e}")
 
     @staticmethod
-    def _extract_slide_text(slide):
+    def _extract_slide_text(slide) -> str:
         """
         Extracts text from the given slide.
         :param slide: slide to extract text from.

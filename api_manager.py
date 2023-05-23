@@ -14,7 +14,7 @@ class APIManager:
 
     @staticmethod
     @backoff.on_exception(backoff.expo, openai.error.RateLimitError)
-    async def generate_answer(prompt):
+    async def generate_answer(prompt: str) -> str:
         """
         Send a prompt to OpenAI API and get the answer.
         use backoff mechanism to handle rate limit errors.
