@@ -22,12 +22,12 @@ class PPTXParser:
         Extracts text from a PowerPoint presentation.
         :return: list of slides text.
         """
-        self.open_presentation()
+        self._open_presentation()
         self._slides = [self._extract_slide_text(slide)
                         for slide in self._presentation.slides]
         return self._slides
 
-    def open_presentation(self):
+    def _open_presentation(self):
         """
         Opens a PowerPoint presentation.
         :raises: ValueError if the presentation doesn't exist.

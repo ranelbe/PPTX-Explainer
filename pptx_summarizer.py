@@ -18,7 +18,15 @@ class PPTXSummarizer:
         """
         self.pptx_path = pptx_path
 
-    async def generate_result_list(self) -> list:
+    async def create_result_file(self):
+        """
+        Create a result json file.
+        """
+        with open(OUTPUT_FILE_NAME, 'w') as file:
+            result_list = await self._generate_result_list()
+            file.write(json.dumps(result_list))
+
+    async def _generate_result_list(self) -> list:
         """
         Generate a list of results from the API.
         :return: a list of results.
@@ -32,11 +40,3 @@ class PPTXSummarizer:
             tasks.append(task)
         results = await asyncio.gather(*tasks)
         return results
-
-    async def create_result_file(self):
-        """
-        Create a result json file.
-        """
-        with open(OUTPUT_FILE_NAME, 'w') as file:
-            result_list = await self.generate_result_list()
-            file.write(json.dumps(result_list))
