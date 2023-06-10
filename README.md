@@ -1,9 +1,3 @@
-# The GPT-Explainer Project
-
-To run the script type:
-
-`python main.py pptx_file_path`
-
 ## Introduction
 
 Learning Software Development is hard. Especially when you can't understand the lecturer's presentations. Wouldn't it be nice to have someone explain them for you?
