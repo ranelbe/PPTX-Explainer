@@ -3,11 +3,12 @@ import openai
 import backoff
 
 
-class APIManager:
+class GptAPIManager:
     """ A class to manage the API calls to the OpenAI api. """
 
     def __init__(self):
-        """ initialization.
+        """
+        Initialization.
         Set the API key from an environment variable.
         """
         openai.api_key = os.getenv("OPENAI_API_KEY")  # an environment variable
@@ -17,9 +18,9 @@ class APIManager:
     async def generate_answer(prompt: str) -> str:
         """
         Send a prompt to OpenAI API and get the answer.
-        use backoff mechanism to handle rate limit errors.
-        :param prompt: the prompt to send.
-        :return: the answer.
+        Use backoff mechanism to handle rate limit errors.
+        :param prompt: The prompt to send.
+        :return: The answer.
         """
         completion = await openai.ChatCompletion.acreate(
                 model="gpt-3.5-turbo",

@@ -6,35 +6,31 @@ SLIDE_PARSE_ERROR = "Cannot parse this slide: "
 
 
 class PPTXParser:
-    """ Parse the presentation to get its data """
+    """ Parse the presentation to get its data. """
 
-    def __init__(self, presentation_path: str):
-        """
-           initialization.
-           :param presentation_path: path to the PowerPoint presentation.
-        """
-        self._presentation_path = presentation_path
+    def __init__(self):
+        """ initialization. """
         self._presentation = None
         self._slides = []
 
-    def extract_slides_text(self) -> list:
+    def extract_slides_text(self, pptx_path: str) -> list:
         """
         Extracts text from a PowerPoint presentation.
-        :return: list of slides text.
+        :return: List of slides text.
         """
-        self._open_presentation()
+        self._open_presentation(pptx_path)
         self._slides = [self._extract_slide_text(slide)
                         for slide in self._presentation.slides]
         return self._slides
 
-    def _open_presentation(self):
+    def _open_presentation(self, pptx_path: str):
         """
         Opens a PowerPoint presentation.
-        :raises: ValueError if the presentation doesn't exist.
+        :raises: ValueError if the presentation doesn't exist,
         or is not in the correct format.
         """
         try:
-            self._presentation = Presentation(self._presentation_path)
+            self._presentation = Presentation(pptx_path)
         except exc.PackageNotFoundError as e:
             raise ValueError(f"{FILE_ERROR}\n{e}")
 
@@ -42,8 +38,8 @@ class PPTXParser:
     def _extract_slide_text(slide) -> str:
         """
         Extracts text from the given slide.
-        :param slide: slide to extract text from.
-        :return: the slide text.
+        :param slide: Slide to extract text from.
+        :return: The slide text.
         :raises: ValueError if the slide cannot be parsed.
         """
         text_runs = []
