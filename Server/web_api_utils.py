@@ -12,7 +12,7 @@ class ErrorMessages:
     NO_FILE_ATTACHED = {'upload': 'No file attached'}
     EMPTY_FILENAME = {'upload': 'Empty filename'}
     MISSING_UID = {'status': 'Missing UID parameter'}
-    NO_UPLOAD_FOUND = {'status': 'no upload found'}
+    NO_UPLOAD_FOUND = {'status': 'not found'}
 
 
 def generate_filename(filename: str) -> (str, str):

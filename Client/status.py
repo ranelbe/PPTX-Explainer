@@ -10,11 +10,17 @@ class Status:
         self.explanation = data.get('explanation')
 
     def __str__(self):
-        return f"Status: {self.status}\n"\
-               f"Filename: {self.filename}\n"\
-               f"Timestamp: {self.timestamp}\n"\
-               f"Explanation: {self.explanation}"
+        return f"""
+        ============== Status =============
+        Status: {self.status}
+        Filename: {self.filename}
+        Timestamp: {self.timestamp}
+        Explanation: {self.explanation}\n"""
 
     def is_done(self):
         """ Check if the status is done. """
         return self.status == 'done'
+
+    def is_pending(self):
+        """ Check if the status is pending. """
+        return self.status == 'pending'
