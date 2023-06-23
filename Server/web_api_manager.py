@@ -1,10 +1,9 @@
 from flask import Flask, request, jsonify
 from utils import UPLOADS_FOLDER, make_directories
-from web_api_utils import generate_filename, \
-    load_explanation, ErrorMessages
-import os
-import glob
+from web_api_utils import load_explanation, ErrorMessages, \
+    save_to_db, fetch_upload
 import json
+
 
 app = Flask(__name__)
 app.config['UPLOADS_FOLDER'] = UPLOADS_FOLDER
@@ -14,7 +13,7 @@ app.config['UPLOADS_FOLDER'] = UPLOADS_FOLDER
 def upload() -> json:
     """
     Route to handle file upload post requests.
-    This route saves the given file in the 'uploads' folder.
+    Saves the given file in the 'uploads' folder and updates the DB.
     :return: JSON object with the generated UID of the uploaded file.
     """
     # check if the post request has a file part
@@ -26,48 +25,48 @@ def upload() -> json:
     if file.filename == '':
         return jsonify(ErrorMessages.EMPTY_FILENAME), 400
 
-    new_filename, uid = generate_filename(file.filename)
+    try:
+        email = request.form.get('email')  # might be None
+        upload_obj = save_to_db(file.filename, email)  # save to db
+        file.save(upload_obj.upload_path)  # save to uploads folder
+    except Exception as e:
+        return jsonify({'upload': str(e)}), 500
 
-    # save the file in the 'uploads' folder
-    file_path = os.path.join(app.config['UPLOADS_FOLDER'], new_filename)
-    file.save(file_path)
-
-    return jsonify({'uid': uid})
+    # return the UID of the uploaded file
+    return jsonify({'uid': upload_obj.uid})
 
 
-@app.route('/status/<uid>', methods=['GET'])
-@app.route('/status/', methods=['GET'])
-def status(uid=None) -> json:
+@app.route('/status', methods=['GET'])
+def status() -> json:
     """
     Route to handle status get requests.
-    :param uid: The unique ID of the uploaded file.
     :return: JSON object with the available information about the upload.
     """
-    # check if the uid parameter is missing
-    if not uid:
-        return jsonify(ErrorMessages.MISSING_UID), 400
+    try:
+        # get the parameters from the request (might be None)
+        uid = request.args.get('uid')
+        filename = request.args.get('filename')
+        email = request.args.get('email')
 
-    # search for the file with the given uid in the 'uploads' folder
-    uploads = glob.glob(os.path.join(
-        app.config['UPLOADS_FOLDER'], '**', f"*{uid}*"),
-        recursive=True
-    )
+        # search for the upload in the database
+        upload_obj = fetch_upload(uid=uid, filename=filename, email=email)
 
-    if not uploads:
-        return jsonify(ErrorMessages.NO_UPLOAD_FOUND), 404
+        # load the explanation if exists
+        explanation = load_explanation(upload_obj.output_path)
 
-    # file was found extract the original filename and the timestamp
-    file_path = uploads[0]
-    filename = os.path.basename(file_path)
-    original_filename, timestamp = filename.split('_')[0:2]
-    explanation, status_msg = load_explanation(filename)
+    except Exception as e:
+        return jsonify({'status': str(e)}), 500
 
     return jsonify({
-        'status': status_msg,
-        'filename': original_filename,
-        'timestamp': timestamp,
+        'uid': upload_obj.uid,
+        'filename': upload_obj.filename,
+        'user_id': upload_obj.user_id,
+        'upload_time': upload_obj.upload_time,
+        'finish_time': upload_obj.finish_time,
+        'status': upload_obj.status,
         'explanation': explanation
     })
+
 
 if __name__ == '__main__':
     make_directories()

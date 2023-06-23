@@ -2,6 +2,8 @@ import os
 import openai
 import backoff
 
+# an environment variable
+API_KEY = os.getenv("OPENAI_API_KEY")
 
 class GptAPIManager:
     """ A class to manage the API calls to the OpenAI api. """
@@ -11,7 +13,7 @@ class GptAPIManager:
         Initialization.
         Set the API key from an environment variable.
         """
-        openai.api_key = os.getenv("OPENAI_API_KEY")  # an environment variable
+        openai.api_key = API_KEY
 
     @staticmethod
     @backoff.on_exception(backoff.expo, openai.error.RateLimitError)

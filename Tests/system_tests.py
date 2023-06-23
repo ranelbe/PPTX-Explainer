@@ -4,11 +4,14 @@ import sys
 import time
 from unittest import TestCase
 from Client.client import upload, get_status
+from utils import UploadStatus
 
 main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SERVER = os.path.join(main_dir, 'Server', 'web_api_manager.py')
 EXPLAINER = os.path.join(main_dir, 'Explainer', 'pptx_explainer.py')
-PPTX_PATH = 'pptx_files/test.pptx'
+FILE_NAME = 'test.pptx'
+PPTX_PATH = f'pptx_files/{FILE_NAME}'
+USER_EMAIL = 'ranelbe@gmail.com'
 
 
 class Test(TestCase):
@@ -18,7 +21,7 @@ class Test(TestCase):
         """ Start the server and the explainer. """
         self.start_server()
         self.start_explainer()
-        self.filename = os.path.basename(os.path.splitext(PPTX_PATH)[0])
+        self.filename = PPTX_PATH
         time.sleep(5)
 
     def tearDown(self):
@@ -38,25 +41,30 @@ class Test(TestCase):
         """ Test the upload and status of a file. """
 
         # upload a file and get the uid.
-        uid = upload(PPTX_PATH)
+        uid = upload(PPTX_PATH, USER_EMAIL)
         print(uid)
         self.assertIsNotNone(uid)
         time.sleep(10)
 
         # check the status of the uploaded file.
-        status = get_status(uid)
+        status = get_status(uid=uid)
         print(status)
         self.assertIsNotNone(status)
-        self.assertTrue(status.is_pending())
-        self.assertEqual(status.filename, self.filename)
-        self.assertIsNotNone(status.timestamp)
+        self.assertEqual(status.filename, FILE_NAME)
+        self.assertIsNotNone(status.user_id)
+        self.assertTrue(status.status in [UploadStatus.PENDING, UploadStatus.PROCESSING])
+        self.assertIsNotNone(status.upload_time)
+        self.assertIsNone(status.finish_time)
         self.assertIsNone(status.explanation)
 
         # wait for the file to be processed.
-        time.sleep(110)
-        status = get_status(uid)
+        time.sleep(70)
+        status = get_status(filename=FILE_NAME, email=USER_EMAIL)
         print(status)
-        self.assertTrue(status.is_done())
-        self.assertEqual(status.filename, self.filename)
-        self.assertIsNotNone(status.timestamp)
+        self.assertIsNotNone(status)
+        self.assertEqual(status.filename, FILE_NAME)
+        self.assertIsNotNone(status.user_id)
+        self.assertEqual(status.status, UploadStatus.DONE)
+        self.assertIsNotNone(status.upload_time)
+        self.assertIsNotNone(status.finish_time)
         self.assertIsNotNone(status.explanation)

@@ -1,30 +1,20 @@
-from pptx_parser import PPTXParser
-from prompt_composer import PromptComposer
-from gpt_api_manager import GptAPIManager
-from utils import UPLOADS_FOLDER, PROCESSED_FOLDER,\
-    OUTPUTS_FOLDER, make_directories
 import asyncio
 import json
-import os
-import shutil
 import time
-
+from datetime import datetime
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+from DB.database import engine, Upload
+from gpt_api_manager import GptAPIManager
+from pptx_parser import PPTXParser
+from prompt_composer import PromptComposer
+from utils import make_directories
+from utils import UploadStatus
 
 WAIT_TIME = 10
 pptxParser = PPTXParser()
 promptComposer = PromptComposer()
 api_manager = GptAPIManager()
-
-
-async def create_json_file(pptx_path: str, output_path: str):
-    """
-    Create an output json file.
-    :param pptx_path: Path to the PowerPoint presentation.
-    :param output_path: Path to the output json file.
-    """
-    result_list = await explain(pptx_path)
-    with open(output_path, 'w') as file:
-        json.dump(result_list, file)
 
 
 async def explain(pptx_path: str) -> list:
@@ -43,28 +33,48 @@ async def explain(pptx_path: str) -> list:
     return results
 
 
+async def create_json_file(upload: Upload):
+    """
+    Create a JSON file with the explanation results.
+    :param upload: the Upload object.
+    """
+    result_list = await explain(upload.upload_path)
+    with open(upload.output_path, 'w') as file:
+        json.dump(result_list, file)
+
+
 async def process_uploads():
     """
-    Process files in the uploads folder.
-    If new file was uploaded, process it and create an output file.
-    Files that were started to be processed will be moved to the processed folder.
-    (This is to prevent processing the same file multiple times).
+    Process all pending/failed uploads.
+    Create a JSON file with the explanation results.
+    Update the status of the upload accordingly.
     """
     while True:
-        for filename in os.listdir(UPLOADS_FOLDER):
-            try:
-                file_path = os.path.join(UPLOADS_FOLDER, filename)
-                if not os.path.isdir(file_path):
-                    print(f"processing file: {filename}")
-                    new_file_path = os.path.join(PROCESSED_FOLDER, filename)
-                    output_filename = os.path.splitext(filename)[0] + '.json'
-                    output_path = os.path.join(OUTPUTS_FOLDER, output_filename)
-                    shutil.move(file_path, new_file_path)
-                    await create_json_file(new_file_path, output_path)
-                    print(f"file {output_filename} created successfully")
-            except Exception as e:
-                print(f"Error: {e}")
-        time.sleep(WAIT_TIME)
+        with Session(engine) as session:
+            # Find pending/failed uploads in the DB
+            pending_uploads = session.query(Upload).filter(
+                or_(Upload.status == UploadStatus.PENDING,
+                    Upload.status == UploadStatus.FAILED)).all()
+
+            # Process each upload
+            for upload in pending_uploads:
+                if isinstance(upload, Upload):
+                    try:
+                        upload.status = UploadStatus.PROCESSING
+                        session.commit()
+                        print(f"processing file: {upload.upload_name}")
+                        await create_json_file(upload)
+                        upload.status = UploadStatus.DONE
+                        upload.finish_time = datetime.now()
+                        session.commit()
+                        print(f"file {upload.output_name} created successfully")
+                    except Exception as e:
+                        upload.status = UploadStatus.FAILED
+                        session.commit()
+                        print(f"Error: {e}")
+
+            # wait some time before checking again pending uploads
+            time.sleep(WAIT_TIME)
 
 
 if __name__ == '__main__':

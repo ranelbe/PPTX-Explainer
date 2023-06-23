@@ -1,26 +1,23 @@
 class Status:
     """
     Class to represent the available information of an uploaded file.
-    status, filename, timestamp, explanation.
     """
     def __init__(self, data):
-        self.status = data.get('status')
+        self.uid = data.get('uid')
         self.filename = data.get('filename')
-        self.timestamp = data.get('timestamp')
+        self.user_id = data.get('user_id')
+        self.upload_time = data.get('upload_time')
+        self.finish_time = data.get('finish_time')
+        self.status = data.get('status')
         self.explanation = data.get('explanation')
 
     def __str__(self):
         return f"""
         ============== Status =============
-        Status: {self.status}
+        UID: {self.uid}
         Filename: {self.filename}
-        Timestamp: {self.timestamp}
+        User ID: {self.user_id}
+        Upload Time: {self.upload_time}
+        Finish Time: {self.finish_time}
+        Status: {self.status}
         Explanation: {self.explanation}\n"""
-
-    def is_done(self):
-        """ Check if the status is done. """
-        return self.status == 'done'
-
-    def is_pending(self):
-        """ Check if the status is pending. """
-        return self.status == 'pending'

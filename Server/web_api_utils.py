@@ -1,9 +1,10 @@
 from datetime import datetime
-from werkzeug.utils import secure_filename
-from utils import OUTPUTS_FOLDER
+from sqlalchemy.orm import Session
+from DB.database import engine, Upload, User
 import uuid
 import os
 import json
+
 
 class ErrorMessages:
     """
@@ -11,39 +12,79 @@ class ErrorMessages:
     """
     NO_FILE_ATTACHED = {'upload': 'No file attached'}
     EMPTY_FILENAME = {'upload': 'Empty filename'}
-    MISSING_UID = {'status': 'Missing UID parameter'}
-    NO_UPLOAD_FOUND = {'status': 'not found'}
+    NO_UPLOAD_FOUND = 'upload not found'
+    USER_NOT_FOUND = 'user not found'
+    MISSING_PARAMETERS = 'uid or filename and email are required'
 
 
-def generate_filename(filename: str) -> (str, str):
+def save_to_db(filename: str, email: str) -> Upload:
     """
-    Generate a new filename with a unique id and a timestamp.
-    :param filename: The original filename.
-    :return: The new filename and the generated UID.
+    Save the upload to the database.
+    :param filename: The filename of the uploaded file.
+    :param email: The email of the user.
+    :return: The upload object.
     """
-    uid = str(uuid.uuid4())
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    base_name, extension = os.path.splitext(secure_filename(filename))
-    # remove underscores from the filename if any
-    base_name = base_name.replace('_', '')
-    new_filename = f"{base_name}_{timestamp}_{uid}{extension}"
-    return new_filename, uid
+    with Session(engine) as session:
+        # create the upload object
+        upload_obj = Upload(
+            uid=uuid.uuid4(),
+            filename=filename,
+            upload_time=datetime.now()
+        )
+        if email:
+            # fetch the user from the database if exists
+            user = session.query(User).filter(User.email == email).first()
+            if not user:
+                user = User(email=email)  # create new user
+                session.add(user)
+                session.commit()
+            # associate the user with the new upload
+            upload_obj.user_id = user.id
+
+        # commit the changes to the database
+        session.merge(upload_obj)
+        session.commit()
+
+    return upload_obj
 
 
-def load_explanation(filename: str) -> (str, str):
+def fetch_upload(uid: str, filename: str, email: str):
+    """
+    Fetch the upload from the database.
+    :param uid: the uid of the upload.
+    :param filename: the filename of the upload.
+    :param email: the email of the user.
+    :return: The upload object if exists.
+    """
+    with Session(engine) as session:
+        if uid:
+            # fetch the upload with the given uid from the database
+            upload = session.query(Upload).filter_by(uid=uuid.UUID(uid)).first()
+        elif filename and email:
+            # fetch the upload with the given filename and email from the database
+            user = session.query(User).filter_by(email=email).first()
+            if not user:
+                raise ValueError(ErrorMessages.USER_NOT_FOUND)
+            upload = session.query(Upload). \
+                filter_by(user_id=user.id, filename=filename). \
+                order_by(Upload.upload_time.desc()).first()
+        else:
+            raise ValueError(ErrorMessages.MISSING_PARAMETERS)
+
+        if not upload:
+            # can't find the upload in the database
+            raise ValueError(ErrorMessages.NO_UPLOAD_FOUND)
+
+        return upload
+
+
+def load_explanation(output_path: str):
     """
     Load the explanation from the output file if it exists.
-    :param filename: The filename of the uploaded file.
+    :param output_path: The path to the output file.
     :return: Explanation if it exists, None otherwise.
-    And the status message (done or pending).
     """
-    output_path = os.path.join(OUTPUTS_FOLDER,
-                               os.path.splitext(filename)[0] + '.json')
     if os.path.exists(output_path):
         with open(output_path, 'r') as file:
-            explanation = json.load(file)
-        status_msg = 'done'
-    else:
-        explanation = None
-        status_msg = 'pending'
-    return explanation, status_msg
+            return json.load(file)
+    return None
