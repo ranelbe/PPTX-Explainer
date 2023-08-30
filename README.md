@@ -1,9 +1,9 @@
 # The GPT-Explainer Project
 
-To run the script type:
-
-`python main.py pptx_file_path`
-
+Take a look at the test_results.txt file, the test passed successfully. <br>
+notice: 
+I added requirements.txt file, make sure you have all the requirements installed. <br>
+I also added the bonus requirements Properties, and Email validation.
 ## Introduction
 
 Learning Software Development is hard. Especially when you can't understand the lecturer's presentations. Wouldn't it be nice to have someone explain them for you?
