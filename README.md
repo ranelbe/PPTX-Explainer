@@ -1,5 +1,6 @@
 # PPTX Explainer
-A server-client system processes uploaded PowerPoint presentations using OpenAI GPT-3.5 Turbo to generate explanations for display.
+A Client-Server system, incorporating SQLAlchemy for upload and user data management, <br>
+leverages the OpenAI API to process uploaded PowerPoint presentations and generate display-ready explanations. <br><br>
 It consists of three main components:
 <ul>
 <li>Server (web_api_manager.py): This component is a Flask-based web application that serves as an interface for users to upload their PPTX files. Upon file submission, the application generates a unique identifier (UID) for the file and stores it in the 'uploads' directory. Additionally, it records the upload in a database, associating it with the respective user.</li>
